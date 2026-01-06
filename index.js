@@ -1,8 +1,7 @@
-// index.js
-require('dotenv').config(); // Make sure .env has TOKEN=your_token_here
 const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
 const Canvas = require('canvas');
 
+// Create client with intents
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -12,31 +11,26 @@ const client = new Client({
   ]
 });
 
+// Bot ready event
 client.once('clientReady', () => {
   console.log('BOT IS ONLINE');
 });
 
-// WELCOME MESSAGE + IMAGE CARD
-client.on('guildMemberAdd', async member => {
+// WELCOME CARD + PLAIN TEXT
+client.on('guildMemberAdd', async (member) => {
   try {
-    const channel = member.guild.channels.cache.get('1446661159326584894');
-    if (!channel) return;
+    // DEBUG
+    console.log(DEBUG: ${member.user.tag} joined);
 
-    // 1️⃣ Send plain text welcome (no ping)
-    channel.send(
-      **Hey ${member.displayName}, welcome to PARLAYS ENERGY 🏀🏈⚽ (let's eat)!**\n +
-      Check out #rules and all channels in the server, feel the love and vibes
-    );
-
-    // 2️⃣ Create the Canvas welcome card
+    // Create canvas
     const canvas = Canvas.createCanvas(700, 250);
     const ctx = canvas.getContext('2d');
 
-    // Background image from Postimg (public)
+    // Load server banner as background
     const background = await Canvas.loadImage('https://i.postimg.cc/3Ryb0GkD/IMG-20251128-144143-389.jpg');
     ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-    // User avatar
+    // Load member avatar
     const avatar = await Canvas.loadImage(member.displayAvatarURL({ extension: 'png' }));
     const avatarSize = 100;
     const avatarX = 50;
@@ -50,14 +44,24 @@ client.on('guildMemberAdd', async member => {
     ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
 
-    // Convert to attachment and send
+    // Convert canvas to attachment
     const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'welcome.png' });
-    channel.send({ files: [attachment] });
+
+    // Send messages in the welcome channel
+    const channel = member.guild.channels.cache.get('1446661159326584894');
+    if (channel) {
+      // Plain text welcome (no ping)
+      channel.send(Hey ${member.displayName}, welcome to PARLAYS ENERGY 🏀🏈⚽️ (let's eat)!
+Check out #rules and all channels in the server, feel the love and vibes);
+
+      // Image card
+      channel.send({ files: [attachment] });
+    }
 
   } catch (err) {
-    console.log('Error creating welcome card:', err);
+    console.error('Error creating welcome card:', err);
   }
 });
 
-// Login using token from .env
+// Login with token from environment variable
 client.login(process.env.TOKEN);
